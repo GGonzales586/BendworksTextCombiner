@@ -4,12 +4,15 @@
 import os, sys, openpyxl, getpass
 from openpyxl.styles import colors, fonts, alignment, borders
 from openpyxl import worksheet
+from datetime import datetime, date
 
 def sortByIndex(List, index):
     List.sort(key = lambda i: i[index])
     return List
 
 user = getpass.getuser()
+currentYear = datetime.now().year
+currentDate = date.today()
 
 while True:
     try:
@@ -71,7 +74,7 @@ combinedFilePath = targetDir + '\\Combined' + goodListName + '.xlsx'
 headerAlignment = alignment.Alignment(horizontal = 'center', vertical = 'center', wrap_text = True)
 headerFont = fonts.Font(size = 14, bold = True)
 
-sheetHeaderList = {'Job Name': jobName, 'Job Number': jobNum, 'Submitted by': user}
+sheetHeaderList = {'Job Name': jobName, 'Job Number': jobNum, 'Area': goodListName, 'Submitted by': user}
 colCounter = 1
 for key, vals in sheetHeaderList.items():
     combinedSheet.cell(row = 1, column = colCounter).value = key
@@ -129,6 +132,24 @@ for file in os.listdir(searchPath):
         masterValues.append(wantedValues)
 
 sortedList = sortByIndex(masterValues, 1)
+bendCountSize1 = 0      #bendCount variables for trackin number of bends for the PFS tracking sheet.
+bendSize1Param = ['1/2', '3/4', '1', '1 1/4', '1 1/2']
+bendCountSize2 = 0
+bendSize2Param = ['2', '2 1/2']
+bendCountSize3 = 0
+bendSize3Param = ['3', '3 1/2']
+bendCountSize4 = 0
+bendSize4Param = ['4']
+
+for lists in sortedList:
+    if lists[1] in bendSize1Param:
+        bendCountSize1 += 1
+    elif lists[1] in bendSize2Param:
+        bendCountSize2 +=1
+    elif lists[1] in bendSize3Param:
+        bendCountSize3 += 1
+    elif lists[1] in bendSize4Param:
+        bendCountSize4 += 1
         
 for data in sortedList:
     rowCounter +=2
@@ -142,7 +163,7 @@ for data in sortedList:
 for x in range(4):
     combinedSheet.row_dimensions[x].height = 45
 
-colWidths = {'colWidt10' : ['F', 'G', 'H', 'I', 'J', 'O'], 'colWidth12' : ['D', 'E', 'N', 'K'], 'colWidth15' : ['A', 'B', 'C'], 'colWidth35' : ['L', 'M']}
+colWidths = {'colWidt10' : ['F', 'G', 'H', 'I', 'J', 'O'], 'colWidth12' : ['E', 'N', 'K'], 'colWidth15' : ['A', 'B', 'C', 'D'], 'colWidth35' : ['L', 'M']}
 
 for key, value in colWidths.items():
     if '10' in key:
@@ -180,9 +201,19 @@ for cell in range(5 , valueRange):
 # Need: to format printing 10 11x17 landscape
 # Need: to format border
 # Need: to print header at the top of each 11x17 sheet
+# Need: to auto fill out the PFS tracking sheet.
+
 
 
 bendWB.save(combinedFilePath)
 print('The workbook is saved in the following locaton : \n\n' + combinedFilePath)
+
+PFSTrackingwb = openpyxl.load_workbook(projectsDirPath + '\\' + str(currentYear) + ' PRE-FAB TRACKING.xlsx')
+trackingSheet = PFSTrackingwb.active
+columnValues = {'A': jobNum, 'B': goodListName + ' CONDUIT BENDS', 'C': currentDate, 'D': user + '.py', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
+
+for cell in trackingSheet['B']:
+    if cell.value is None:
+
 
 
