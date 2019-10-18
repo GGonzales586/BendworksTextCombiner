@@ -210,10 +210,16 @@ print('The workbook is saved in the following locaton : \n\n' + combinedFilePath
 
 PFSTrackingwb = openpyxl.load_workbook(projectsDirPath + '\\' + str(currentYear) + ' PRE-FAB TRACKING.xlsx')
 trackingSheet = PFSTrackingwb.active
-columnValues = {'A': jobNum, 'B': goodListName + ' CONDUIT BENDS', 'C': currentDate, 'D': user + '.py', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
+columnValues = {int(1): jobNum}#, 2: goodListName + ' CONDUIT BENDS', 3: currentDate, 4: user + '.py', 20: bendCountSize1, 21: bendCountSize2, 22: bendCountSize3, 23: bendCountSize4}
 
+rowToWriteIn = 1
 for cell in trackingSheet['B']:
-    if cell.value is None:
+    if goodListName in cell:
+        break
+    elif cell.value is None:
+        for col, trackVal in columnValues: 
+            trackingSheet.cell(row = 2, column = col) = trackVal
+
 
 
 
