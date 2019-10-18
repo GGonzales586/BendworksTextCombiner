@@ -3,7 +3,7 @@
 
 import os, sys, openpyxl, getpass
 from openpyxl.styles import colors, fonts, alignment, borders
-from openpyxl import worksheet
+from openpyxl import worksheet, cell
 from datetime import datetime, date
 
 def sortByIndex(List, index):
@@ -208,17 +208,22 @@ for cell in range(5 , valueRange):
 bendWB.save(combinedFilePath)
 print('The workbook is saved in the following locaton : \n\n' + combinedFilePath)
 
-PFSTrackingwb = openpyxl.load_workbook(projectsDirPath + '\\' + str(currentYear) + ' PRE-FAB TRACKING.xlsx')
+PFSTrackingwb = openpyxl.load_workbook('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')    # Replace file path with - projectsDirPath + '\\' + str(currentYear)
 trackingSheet = PFSTrackingwb.active
 columnValues = {int(1): jobNum}#, 2: goodListName + ' CONDUIT BENDS', 3: currentDate, 4: user + '.py', 20: bendCountSize1, 21: bendCountSize2, 22: bendCountSize3, 23: bendCountSize4}
 
 rowToWriteIn = 1
-for cell in trackingSheet['B']:
-    if goodListName in cell:
+for x in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_col = 2, values_only = True):   
+    if goodListName in str(x):
+        print('\nBend area already found in PFS Tracking workbook. No values added.\n')
         break
-    elif cell.value is None:
+    elif x[0] is None:
+        rowToInsert = cell.row
+        trackingSheet.insert_rows(x).row
         for col, trackVal in columnValues: 
-            trackingSheet.cell(row = 2, column = col) = trackVal
+            trackingSheet.cell(row = x, column = col).value = trackVal
+            break
+PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
 
 
 
