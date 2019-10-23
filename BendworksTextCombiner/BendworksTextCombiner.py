@@ -3,7 +3,8 @@
 
 import os, sys, openpyxl, getpass
 from openpyxl.styles import colors, fonts, alignment, borders
-from openpyxl import worksheet, cell
+from openpyxl.utils.cell import column_index_from_string
+from openpyxl import worksheet
 from datetime import datetime, date
 
 def sortByIndex(List, index):
@@ -210,20 +211,24 @@ print('The workbook is saved in the following locaton : \n\n' + combinedFilePath
 
 PFSTrackingwb = openpyxl.load_workbook('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')    # Replace file path with - projectsDirPath + '\\' + str(currentYear)
 trackingSheet = PFSTrackingwb.active
-columnValues = {int(1): jobNum}#, 2: goodListName + ' CONDUIT BENDS', 3: currentDate, 4: user + '.py', 20: bendCountSize1, 21: bendCountSize2, 22: bendCountSize3, 23: bendCountSize4}
+goodListName = goodListName + ' CONDUIT BENDS'
+columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.py', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
 
-rowToWriteIn = 1
+rowToWriteIn = 95
 for x in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_col = 2, values_only = True):   
     if goodListName in str(x):
         print('\nBend area already found in PFS Tracking workbook. No values added.\n')
         break
-    elif x[0] is None:
-        rowToInsert = cell.row
-        trackingSheet.insert_rows(x).row
-        for col, trackVal in columnValues: 
-            trackingSheet.cell(row = x, column = col).value = trackVal
-            break
+    elif x[0] is None:        
+        trackingSheet.insert_rows(rowToWriteIn)
+        for col, trackVal in columnValues.items(): 
+            trackingSheet.cell(row = rowToWriteIn, column = column_index_from_string(col)).value = trackVal
+        break
+    else:
+        rowToWriteIn +=1
 PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
+
+# Inserting a new row needs to carry the sum range with it.
 
 
 
