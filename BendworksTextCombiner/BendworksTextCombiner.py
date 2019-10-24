@@ -1,11 +1,12 @@
 #! python3
 # BendworksTextCombiner.py - A program to combine Greenlee bend reports into one line in an excel workbook for less printing and a cleaner format.
 
-import os, sys, openpyxl, getpass
+import os, sys, openpyxl, getpass, time
 from openpyxl.styles import colors, fonts, alignment, borders
 from openpyxl.utils.cell import column_index_from_string
 from openpyxl import worksheet
 from datetime import datetime, date
+from copy import copy
 
 def sortByIndex(List, index):
     List.sort(key = lambda i: i[index])
@@ -18,13 +19,13 @@ currentDate = date.today()
 while True:
     try:
         os.chdir('V:\\1. VDC Projects\\GreenleeBendReports\\' + user + '\\ListsOfWantedBends')
-        jobNum = str(input('Enter the job number: '))   # This is used to search the projects folder and get the specific file path name to save the combined file to.
-        goodListName = input("Enter the name of the txt file with the Mark id's of wanted bend reports to combine. \n(This should be the exported schedule from Revit.)\n")
+        jobNum = str(input('Enter the job number: \n\n'))   # This is used to search the projects folder and get the specific file path name to save the combined file to.
+        goodListName = input("\nEnter the name of the txt file with the Mark id's of wanted bend reports to combine. \n(This should be the exported schedule from Revit.)\n\n")
         goodListName = goodListName + '.txt'
         goodListFile = open(goodListName, 'rb').read()
         break
     except:
-        print("File couldn't be opened!\nCheck your spelling.\nMake sure your txt file is in the \"ListsOfWantedBends\" folder")
+        print("\nFile couldn't be opened!\nCheck your spelling.\nMake sure your txt file is in the \"ListsOfWantedBends\" folder\n")
 
 fileText = goodListFile.decode('utf16')     #Revit schedules need to be decoded to be able to read them.
 wantedFiles = fileText.splitlines()
@@ -56,9 +57,8 @@ while not jobFound:
                     jobFound = True
         targetDir = jobDirPath + targetDir
     except:
-        print('\nJob not found in VDC\Projects folder!\nRestartand double check to see if job number exists in the VDC projects folder.')
-        input('Hit "Enter" key to close.')
-        sys.exit()
+        print('\nJob not found in VDC\Projects folder!\nRestartand double check to see if job number exists in the VDC projects folder.\n')
+        exit(0)
 
 # This portion creates the excel workbook, reads the wantedFiles values and appends the correct information to the workbook
 
@@ -202,33 +202,42 @@ for cell in range(5 , valueRange):
 # Need: to format printing 10 11x17 landscape
 # Need: to format border
 # Need: to print header at the top of each 11x17 sheet
-# Need: to auto fill out the PFS tracking sheet.
-
-
 
 bendWB.save(combinedFilePath)
-print('The workbook is saved in the following locaton : \n\n' + combinedFilePath)
+print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePath)
 
-PFSTrackingwb = openpyxl.load_workbook('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')    # Replace file path with - projectsDirPath + '\\' + str(currentYear)
+PFSTrackingwb = openpyxl.load_workbook('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING TEST.xlsx')    # Replace file path with - projectsDirPath + '\\' + str(currentYear)
 trackingSheet = PFSTrackingwb.active
 goodListName = goodListName + ' CONDUIT BENDS'
-columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.py', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
+columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.py', 'E': 1, 'F': 'SHOP', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
 
 rowToWriteIn = 95
 for x in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_col = 2, values_only = True):   
     if goodListName in str(x):
         print('\nBend area already found in PFS Tracking workbook. No values added.\n')
-        break
-    elif x[0] is None:        
+        PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
+        exit(0)
+    elif x[0] is None:   
+        columnCounter = 1
         trackingSheet.insert_rows(rowToWriteIn)
+        for column in range(trackingSheet.min_column, trackingSheet.max_column):
+            formattedCell = trackingSheet.cell(row = rowToWriteIn - 1, column = columnCounter)
+            newCell = trackingSheet.cell(row = rowToWriteIn, column = columnCounter)
+            if formattedCell.has_style:
+                newCell._style = copy(formattedCell._style)
+                columnCounter += 1            
         for col, trackVal in columnValues.items(): 
-            trackingSheet.cell(row = rowToWriteIn, column = column_index_from_string(col)).value = trackVal
+            trackingSheet.cell(row = rowToWriteIn, column = column_index_from_string(col)).value = trackVal                    
         break
     else:
         rowToWriteIn +=1
+
 PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
+print('\nValues added to the PFS tracking sheet!\n')
+exit(0)
 
 # Inserting a new row needs to carry the sum range with it.
+# Need: to do some math to output the offset. (if it is an offset or kic 90.)
 
 
 
