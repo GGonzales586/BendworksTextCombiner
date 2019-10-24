@@ -208,16 +208,16 @@ print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePa
 
 PFSTrackingwb = openpyxl.load_workbook('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING TEST.xlsx')    # Replace file path with - projectsDirPath + '\\' + str(currentYear)
 trackingSheet = PFSTrackingwb.active
-goodListName = goodListName + ' CONDUIT BENDS'
+goodListName = goodListName.upper() + ' CONDUIT BENDS'
 columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.py', 'E': 1, 'F': 'SHOP', 'T': bendCountSize1, 'U': bendCountSize2, 'V': bendCountSize3, 'W': bendCountSize4}
 
 rowToWriteIn = 95
-for x in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_col = 2, values_only = True):   
-    if goodListName in str(x):
+for line in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_col = 2, values_only = True):   
+    if goodListName in str(line):
         print('\nBend area already found in PFS Tracking workbook. No values added.\n')
-        PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
+        PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING TEST.xlsx')
         exit(0)
-    elif x[0] is None:   
+    elif line[0] is None:   
         columnCounter = 1
         trackingSheet.insert_rows(rowToWriteIn)
         for column in range(trackingSheet.min_column, trackingSheet.max_column):
@@ -232,12 +232,12 @@ for x in trackingSheet.iter_rows(min_row = 95, max_row = 105, min_col =2, max_co
     else:
         rowToWriteIn +=1
 
-PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING.xlsx')
+PFSTrackingwb.save('V:\\5. VDC - Training\\7. RESEARCH AND DEVELOPMENT\\2019 PRE-FAB TRACKING TEST.xlsx')
 print('\nValues added to the PFS tracking sheet!\n')
 exit(0)
 
 # Inserting a new row needs to carry the sum range with it.
-# Need: to do some math to output the offset. (if it is an offset or kic 90.)
+# Need: to do some math to output the offset. (if it is an offset or kick 90.)
 
 
 
