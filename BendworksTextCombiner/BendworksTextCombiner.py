@@ -19,7 +19,7 @@ currentDate = date.today()
 while True:
     try:
         os.chdir('V:\\1. VDC Projects\\GreenleeBendReports\\' + user + '\\ListsOfWantedBends')
-        jobNum = str(input('Enter the job number: \n\n'))   # This is used to search the projects folder and get the specific file path name to save the combined file to.
+        jobNum = str(input('Enter the job number:\n\n'))   # This is used to search the projects folder and get the specific file path name to save the combined file to.
         goodListName = input("\nEnter the name of the txt file with the Mark id's of wanted bend reports to combine. \n(This should be the exported schedule from Revit.)\n\n")
         goodListName = goodListName + '.txt'
         goodListFile = open(goodListName, 'rb').read()
@@ -107,29 +107,28 @@ for file in os.listdir(searchPath):
     if file in listOfFileNames:        
         openFile = open(searchPath + '\\' + file).read()
         splitFile = openFile.splitlines()
-        wantedValues = []
-        if jobNum in str(splitFile[0]):
-            for num in linesToRead:
-                value = splitFile[num]
-                if num == 10:
-                    splitValue = value.split('       ')
-                    val2 = splitValue[1].strip()
-                    wantedValues.append(val2)
-                elif num == 16:
-                    splitValue = value.split(':')
-                    del splitValue[0]
-                    stringValue = ''
-                    for v in splitValue:
-                        stringValue += v
-                    splitValue = stringValue.split('"')
-                    splitValue.pop()
-                    for v in splitValue:
-                        val = v.strip()
-                        wantedValues.append(val)
-                else:
-                    splitValue = value.split(':')
-                    val2 = splitValue[1].strip()
-                    wantedValues.append(val2)
+        wantedValues = []        
+        for num in linesToRead:
+            value = splitFile[num]
+            if num == 10:
+                splitValue = value.split('       ')
+                val2 = splitValue[1].strip()
+                wantedValues.append(val2)
+            elif num == 16:
+                splitValue = value.split(':')
+                del splitValue[0]
+                stringValue = ''
+                for v in splitValue:
+                    stringValue += v
+                splitValue = stringValue.split('"')
+                splitValue.pop()
+                for v in splitValue:
+                    val = v.strip()
+                    wantedValues.append(val)
+            else:
+                splitValue = value.split(':')
+                val2 = splitValue[1].strip()
+                wantedValues.append(val2)
         masterValues.append(wantedValues)
 
 sortedList = sortByIndex(masterValues, 1)
