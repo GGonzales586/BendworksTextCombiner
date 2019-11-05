@@ -65,6 +65,7 @@ while not jobFound:
 bendWB = openpyxl.Workbook()
 combinedSheet = bendWB.active
 combinedSheet.title = 'Combined Bends'
+labelSheet = bendWB.create_sheet('Labels')
 
 paramHeaderList = ['Conduit Type', 'Conduit Size', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Rotation', 'Bend Angle', 'Conc. Bends', 'Error Code']
 linesToRead = [6, 7, 10, 15, 29, 16, 30, 18, 17, 23, 33]
@@ -113,7 +114,7 @@ for file in os.listdir(searchPath):
             if num == 10:
                 splitValue = value.split('       ')
                 val2 = splitValue[1].strip()
-                wantedValues.append(val2)
+                wantedValues.append(val2)            
             elif num == 16:
                 splitValue = value.split(':')
                 del splitValue[0]
@@ -124,14 +125,25 @@ for file in os.listdir(searchPath):
                 splitValue.pop()
                 for v in splitValue:
                     val = v.strip()
-                    wantedValues.append(val)
+                    wantedValues.append(val)            
             else:
                 splitValue = value.split(':')
                 val2 = splitValue[1].strip()
                 wantedValues.append(val2)
         masterValues.append(wantedValues)
 
+listsToRemove = []
+concentricBends = []
+for sublist in masterValues:  
+    if sublist[3] == '0' and sublist[13] == '0':
+        listsToRemove.append(masterValues.index(sublist))
+    elif sublist[3] == '0' and sublist[13] != '0':
+        concentricBends.append(sublist[2])
+for index in reversed(listsToRemove):
+    masterValues.pop(index)
+
 sortedList = sortByIndex(masterValues, 1)
+
 bendCountSize1 = 0      #bendCount variables for trackin number of bends for the PFS tracking sheet.
 bendSize1Param = ['1/2', '3/4', '1', '1 1/4', '1 1/2']
 bendCountSize2 = 0
@@ -157,6 +169,25 @@ for data in sortedList:
     for elem in data:
         combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
         colCounter +=1
+
+labelColCounter = 1
+labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Bend Id']
+for item in labelTitles:
+    labelSheet.cell(column=labelColCounter, row=1, value=item)
+    labelColCounter +=1
+
+commonLabels = [jobName, jobNum, goodListName]
+labelRowCounter = 1
+for lists in sortedList:
+    labelRowCounter += 1
+    for number in range(len(labelTitles)):
+        labelsColCounter = 1
+        for items in commonLabels:
+            labelSheet.cell(column=labelsColCounter, row=labelRowCounter, value=items)
+            labelsColCounter += 1
+        for data in lists[0:3]:
+            labelSheet.cell(column=labelsColCounter, row=labelRowCounter, value=data)
+            labelsColCounter += 1
 
 # This section applies formatting after all the values are processed
 
@@ -203,6 +234,9 @@ for cell in range(5 , valueRange):
 # Need: to print header at the top of each 11x17 sheet
 # Need: to do some math to output the offset. (if it is an offset or kick 90.)
 # Need: to make a label sheet
+# Need: to count conduit sticks for ordering
+# Need: to get rid of the first cut mark and subtract it from the other marks
+# Ned: to figure out orientation of the kwik fit unicouple
 
 bendWB.save(combinedFilePath)
 print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePath)
@@ -240,7 +274,7 @@ for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row
 
 PFSTrackingwb.save(PFSFilePath)    # Replace file path with - PFSFilePath
 print('\nValues added to the PFS tracking sheet!\n')
-exit(0)
+time.sleep(3)
 
 # Inserting a new row needs to carry the sum range with it.
 
