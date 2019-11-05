@@ -21,6 +21,7 @@ while True:
         os.chdir('V:\\1. VDC Projects\\GreenleeBendReports\\' + user + '\\ListsOfWantedBends')
         jobNum = str(input('Enter the job number:\n\n'))   # This is used to search the projects folder and get the specific file path name to save the combined file to.
         goodListName = input("\nEnter the name of the txt file with the Mark id's of wanted bend reports to combine. \n(This should be the exported schedule from Revit.)\n\n")
+        startTime = time.time()
         goodListName = goodListName + '.txt'
         goodListFile = open(goodListName, 'rb').read()
         break
@@ -132,6 +133,8 @@ for file in os.listdir(searchPath):
                 wantedValues.append(val2)
         masterValues.append(wantedValues)
 
+totalNumOfBends = str(len(masterValues))
+
 listsToRemove = []
 concentricBends = []
 for sublist in masterValues:  
@@ -233,7 +236,6 @@ for cell in range(5 , valueRange):
 # Need: to format border
 # Need: to print header at the top of each 11x17 sheet
 # Need: to do some math to output the offset. (if it is an offset or kick 90.)
-# Need: to make a label sheet
 # Need: to count conduit sticks for ordering
 # Need: to get rid of the first cut mark and subtract it from the other marks
 # Ned: to figure out orientation of the kwik fit unicouple
@@ -252,8 +254,10 @@ columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.
 rowToWriteIn = 5
 for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row, min_col =2, max_col = 2, values_only = True):   
     if goodListName in str(line):
-        print('\nBend area already found in PFS Tracking workbook. No values added.\n')
+        print('\nBend area already found in PFS Tracking workbook. No values added.\n\nLabels created! Ready for a mail merge!')
         PFSTrackingwb.save(PFSFilePath)     # Replace file path with - PFSFilePath
+        endTime = time.time()
+        print('Processed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + ' seconds!!!\n')
         exit(0)
     elif line[0] is None:   
         columnCounter = 1
@@ -273,8 +277,10 @@ for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row
 
 
 PFSTrackingwb.save(PFSFilePath)    # Replace file path with - PFSFilePath
-print('\nValues added to the PFS tracking sheet!\n')
-time.sleep(3)
+print('\nValues added to the PFS tracking sheet!\n\nLabels created! Ready for a mail merge!')
+endTime = time.time()
+print('\nProcessed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + ' seconds!!!')
+time.sleep(5)
 
 # Inserting a new row needs to carry the sum range with it.
 
