@@ -67,6 +67,7 @@ bendWB = openpyxl.Workbook()
 combinedSheet = bendWB.active
 combinedSheet.title = 'Combined Bends'
 labelSheet = bendWB.create_sheet('Labels')
+reportSheet = bendWB.create_sheet('Report')
 
 paramHeaderList = ['Conduit Type', 'Conduit Size', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Rotation', 'Bend Angle', 'Conc. Bends', 'Error Code']
 linesToRead = [6, 7, 10, 15, 29, 16, 30, 18, 17, 23, 33]
@@ -147,7 +148,7 @@ for index in reversed(listsToRemove):
 
 sortedList = sortByIndex(masterValues, 1)
 
-bendCountSize1 = 0      #bendCount variables for trackin number of bends for the PFS tracking sheet.
+bendCountSize1 = 0      #bendCount variables for tracking number of bends for the PFS tracking sheet.
 bendSize1Param = ['1/2', '3/4', '1', '1 1/4', '1 1/2']
 bendCountSize2 = 0
 bendSize2Param = ['2', '2 1/2']
@@ -156,16 +157,137 @@ bendSize3Param = ['3', '3 1/2']
 bendCountSize4 = 0
 bendSize4Param = ['4']
 
+emtConduit_05 = 0
+emtConduit_75 = 0
+emtConduit_1 = 0
+emtConduit_125 = 0
+emtConduit_150 = 0
+emtConduit_2 = 0
+emtConduit_250 = 0
+emtConduit_3 = 0
+emtConduit_350 = 0
+emtConduit_4 = 0
+
+rmcConduit_05 = 0
+rmcConduit_75 = 0
+rmcConduit_1 = 0
+rmcConduit_125 = 0
+rmcConduit_150 = 0
+rmcConduit_2 = 0
+rmcConduit_250 = 0
+rmcConduit_3 = 0
+rmcConduit_350 = 0
+rmcConduit_4 = 0
+
+otherConduit_05 = 0
+otherConduit_75 = 0
+otherConduit_1 = 0
+otherConduit_125 = 0
+otherConduit_150 = 0
+otherConduit_2 = 0
+otherConduit_250 = 0
+otherConduit_3 = 0
+otherConduit_350 = 0
+otherConduit_4 = 0
+
+
+
 for lists in sortedList:
-    if lists[1] in bendSize1Param:
+    if lists[1] in bendSize1Param:  #Maybe this can be achieved through a function without re-writing a bunch of code.
         bendCountSize1 += 1
+        if lists[1] == '1/2':
+            if lists[0] == 'EMT':
+                emtConduit_05 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_05 += 1
+            else:
+                otherConduit_05 += 1
+        elif lists[1] == '3/4':
+            if lists[0] == 'EMT':
+                emtConduit_75 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_75 += 1
+            else:
+                otherConduit_75 += 1
+        elif lists[1] == '1':
+            if lists[0] == 'EMT':
+                emtConduit_1 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_1 += 1
+            else:
+                otherConduit_1 += 1
+        elif lists[1] == '1 1/4':
+            if lists[0] == 'EMT':
+                emtConduit_125 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_125 += 1
+            else:
+                otherConduit_125 += 1
+        elif lists[1] == '1 1/2':
+            if lists[0] == 'EMT':
+                emtConduit_150 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_150 += 1
+            else:
+                otherConduit_150 += 1
+        else:
+            pass
     elif lists[1] in bendSize2Param:
         bendCountSize2 +=1
+        if lists[1] == '2':
+            if lists[0] == 'EMT':
+                emtConduit_2 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_2 += 1
+            else:
+                otherConduit_2 += 1
+        elif lists[1] == '2 1/2':
+            if lists[0] == 'EMT':
+                emtConduit_250 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_250 += 1
+            else:
+                otherConduit_250 += 1
+        else:
+            pass
     elif lists[1] in bendSize3Param:
         bendCountSize3 += 1
+        if lists[1] == '3':
+            if lists[0] == 'EMT':
+                emtConduit_3 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_3 += 1
+            else:
+                otherConduit_3 += 1
+        elif lists[1] == '3 1/2':
+            if lists[0] == 'EMT':
+                emtConduit_350 += 1
+            elif lists[0] == 'RIGID':
+                rmcConduit_350 += 1
+            else:
+                otherConduit_350 += 1
+        else:
+            pass
     elif lists[1] in bendSize4Param:
         bendCountSize4 += 1
-        
+        if lists[0] == 'EMT':
+            emtConduit_4 += 1
+        elif lists[0] == 'RIGID':
+            rmcConduit_4 += 1
+        else:
+            otherConduit_4 += 1
+
+reportSheetRow = 1
+reportColCounter = 1
+reportSheetHeader = ['QTY', 'SIZE', 'TYPE']
+for elem in reportSheetHeaders:
+    reportSheet.cell(column=reportColCounter, row=1, value=elem)
+    reportColCounter += 1
+
+while True:
+    if emtConduit_05 > 0:
+        pass
+
 for data in sortedList:
     rowCounter +=2
     colCounter = 1
@@ -174,7 +296,7 @@ for data in sortedList:
         colCounter +=1
 
 labelColCounter = 1
-labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Bend Id']
+labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Bend Id', 'Sheet', 'Group ID']
 for item in labelTitles:
     labelSheet.cell(column=labelColCounter, row=1, value=item)
     labelColCounter +=1
@@ -238,7 +360,8 @@ for cell in range(5 , valueRange):
 # Need: to do some math to output the offset. (if it is an offset or kick 90.)
 # Need: to count conduit sticks for ordering
 # Need: to get rid of the first cut mark and subtract it from the other marks
-# Ned: to figure out orientation of the kwik fit unicouple
+# Need: to figure out orientation of the kwik fit unicouple
+# Need: to add Sheet and Group Id to the label output
 
 bendWB.save(combinedFilePath)
 print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePath)
@@ -258,6 +381,7 @@ for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row
         PFSTrackingwb.save(PFSFilePath)     # Replace file path with - PFSFilePath
         endTime = time.time()
         print('Processed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + ' seconds!!!\n')
+        time.sleep(5)
         exit(0)
     elif line[0] is None:   
         columnCounter = 1
