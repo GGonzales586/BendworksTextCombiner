@@ -12,6 +12,19 @@ def sortByIndex(List, index):
     List.sort(key = lambda i: i[index])
     return List
 
+def stringToDec(strFrac):
+    try:
+        return float(strFrac)
+    except ValueError:
+        num, denom = strFrac.split('/')
+        try:
+            leading, num = num.split(' ')
+            whole = float(leading)
+        except ValueError:
+            whole = 0
+        frac = float(num) / float(denom)
+        return whole - frac if whole < 0 else whole + frac
+
 user = getpass.getuser()
 currentYear = datetime.now().year
 currentDate = date.today()
@@ -88,7 +101,7 @@ labelSheet = bendWB.create_sheet('Labels')
 reportSheet = bendWB.create_sheet('Report')
 groupSheet = bendWB.create_sheet('Groups')
 
-paramHeaderList = ['Conduit Type', 'Conduit Size', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Angle', 'Bend Rotation', 'Conc. Bends', 'Error Code']
+paramHeaderList = ['Conduit Type', 'Conduit Size', 'Conduit Group', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Angle', 'Bend Rotation', 'Conc. Bends', 'Error Code']
 linesToRead = [6, 7, 10, 15, 29, 16, 30, 18, 17, 23, 33]
 searchPath = ('V:\\1. VDC Projects\\GreenleeBendReports\\' + user + '\\BendWorksExports')
 goodListName = goodListName.replace('.txt', '')
@@ -165,16 +178,32 @@ for sublist in masterValues:
 for index in reversed(listsToRemove):
     masterValues.pop(index)
 
+smallConduitList = []
+bigConduitList = []
+for strList in masterValues:
+    newFloat = stringToDec(strList[1])
+    strList[1] = newFloat
+    if strList[2] in valuePairs.keys():
+        strList.insert(2, valuePairs[strList[2]])
+    if newFloat <= 2.0:
+        smallConduitList.append(strList)
+    elif newFloat >= 2.5:
+        bigConduitList.append(strList)
+
+smallSortedList = sortByIndex(smallConduitList, 2)
+bigSortedList = sortByIndex(bigConduitList, 2)
+bigSortedList = sortByIndex(bigConduitList, 1)
+
 sortedList = sortByIndex(masterValues, 1)
 
 bendCountSize1 = 0      #bendCount variables for tracking number of bends for the PFS tracking sheet.
-bendSize1Param = ['1/2', '3/4', '1', '1 1/4', '1 1/2']
+bendSize1Param = [0.5, .75, 1.0, 1.25, 1.5]
 bendCountSize2 = 0
-bendSize2Param = ['2', '2 1/2']
+bendSize2Param = [2.0, 2.5]
 bendCountSize3 = 0
-bendSize3Param = ['3', '3 1/2']
+bendSize3Param = [3.0, 3.5]
 bendCountSize4 = 0
-bendSize4Param = ['4']
+bendSize4Param = [4.0]
 
 emtConduit_05 = 0
 emtConduit_75 = 0
@@ -211,38 +240,38 @@ otherConduit_4 = 0
 
 
 
-for lists in sortedList:
+for lists in smallSortedList:
     if lists[1] in bendSize1Param:  #Maybe this can be achieved through a function without re-writing a bunch of code.
         bendCountSize1 += 1
-        if lists[1] == '1/2':
+        if lists[1] == .05:
             if lists[0] == 'EMT':
                 emtConduit_05 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_05 += 1
             else:
                 otherConduit_05 += 1
-        elif lists[1] == '3/4':
+        elif lists[1] == .75:
             if lists[0] == 'EMT':
                 emtConduit_75 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_75 += 1
             else:
                 otherConduit_75 += 1
-        elif lists[1] == '1':
+        elif lists[1] == 1.0:
             if lists[0] == 'EMT':
                 emtConduit_1 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_1 += 1
             else:
                 otherConduit_1 += 1
-        elif lists[1] == '1 1/4':
+        elif lists[1] == 1.25:
             if lists[0] == 'EMT':
                 emtConduit_125 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_125 += 1
             else:
                 otherConduit_125 += 1
-        elif lists[1] == '1 1/2':
+        elif lists[1] == 1.5:
             if lists[0] == 'EMT':
                 emtConduit_150 += 1
             elif lists[0] == 'RIGID':
@@ -253,14 +282,14 @@ for lists in sortedList:
             pass
     elif lists[1] in bendSize2Param:
         bendCountSize2 +=1
-        if lists[1] == '2':
+        if lists[1] == 2.0:
             if lists[0] == 'EMT':
                 emtConduit_2 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_2 += 1
             else:
                 otherConduit_2 += 1
-        elif lists[1] == '2 1/2':
+        elif lists[1] == 2.5:
             if lists[0] == 'EMT':
                 emtConduit_250 += 1
             elif lists[0] == 'RIGID':
@@ -271,14 +300,14 @@ for lists in sortedList:
             pass
     elif lists[1] in bendSize3Param:
         bendCountSize3 += 1
-        if lists[1] == '3':
+        if lists[1] == 3.0:
             if lists[0] == 'EMT':
                 emtConduit_3 += 1
             elif lists[0] == 'RIGID':
                 rmcConduit_3 += 1
             else:
                 otherConduit_3 += 1
-        elif lists[1] == '3 1/2':
+        elif lists[1] == 3.5:
             if lists[0] == 'EMT':
                 emtConduit_350 += 1
             elif lists[0] == 'RIGID':
@@ -307,15 +336,22 @@ for elem in reportSheetHeader:
 #    if emtConduit_05 > 0:
 #        pass
 
-for data in sortedList:
+for data in smallSortedList:
     rowCounter +=2
     colCounter = 1
     for elem in data:
         combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
         colCounter +=1
 
+for data in bigSortedList:
+    rowCounter += 2
+    colCounter = 1
+    for elem in data:
+        combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
+        colCounter += 1
+
 labelColCounter = 1
-labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Bend Id', 'Sheet', 'Group ID']
+labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Group ID', 'Bend Id', 'Sheet']
 for item in labelTitles:
     labelSheet.cell(column=labelColCounter, row=1, value=item)
     labelColCounter +=1
@@ -329,7 +365,7 @@ for lists in sortedList:
         for items in commonLabels:
             labelSheet.cell(column=labelsColCounter, row=labelRowCounter, value=items)
             labelsColCounter += 1
-        for data in lists[0:3]:
+        for data in lists[0:4]:
             labelSheet.cell(column=labelsColCounter, row=labelRowCounter, value=data)
             labelsColCounter += 1
 
@@ -362,16 +398,16 @@ bendRotColor = fonts.Font(color = 'FF1493')
 bendAngleColor = fonts.Font(color = '008000')
 
 for cell in range(5 , valueRange):
-    combinedSheet.cell(row = cell, column = 3).font = pipeIdColor
-    combinedSheet.cell(row = cell, column = 5).font = cutMarkColor    
-    combinedSheet.cell(row = cell, column = 6).font = bendMarkColor
+    combinedSheet.cell(row = cell, column = 4).font = pipeIdColor
+    combinedSheet.cell(row = cell, column = 6).font = cutMarkColor    
     combinedSheet.cell(row = cell, column = 7).font = bendMarkColor
     combinedSheet.cell(row = cell, column = 8).font = bendMarkColor
     combinedSheet.cell(row = cell, column = 9).font = bendMarkColor
     combinedSheet.cell(row = cell, column = 10).font = bendMarkColor
-    combinedSheet.cell(row = cell, column = 11).font = cutMarkColor
-    combinedSheet.cell(row = cell, column = 12).font = bendRotColor
-    combinedSheet.cell(row = cell, column = 13).font = bendAngleColor
+    combinedSheet.cell(row = cell, column = 11).font = bendMarkColor
+    combinedSheet.cell(row = cell, column = 12).font = cutMarkColor
+    combinedSheet.cell(row = cell, column = 13).font = bendRotColor
+    combinedSheet.cell(row = cell, column = 14).font = bendAngleColor
 
 groupSheetRow = 1
 for item in sortedValuePairs:
