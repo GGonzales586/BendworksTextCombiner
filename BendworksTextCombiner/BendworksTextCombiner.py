@@ -1,7 +1,7 @@
 #! python3
 # BendworksTextCombiner.py - A program to combine Greenlee bend reports into one line in an excel workbook for less printing and a cleaner format.
 
-import os, sys, openpyxl, getpass, time
+import os, sys, openpyxl, getpass, time, re, operator
 from openpyxl.styles import colors, fonts, alignment, borders
 from openpyxl.utils.cell import column_index_from_string
 from openpyxl import worksheet
@@ -30,12 +30,30 @@ while True:
 
 fileText = goodListFile.decode('utf16')     #Revit schedules need to be decoded to be able to read them.
 wantedFiles = fileText.splitlines()
-listOfFileNames = []
 
-for val in wantedFiles:
-    val = val.replace('"', '')
-    val = val + '.txt'
-    listOfFileNames.append(val)      # This list will used further down to open each file with the names in this list and read the wnated lines for combining.
+listOfFileNames = []
+valuePairs = {}
+for line in wantedFiles:
+    cleanLine = line.replace('"', '')
+    newLine = re.split('\t', cleanLine)
+    listOfFileNames.append(newLine[0] + '.txt')
+    try:
+        valuePairs[newLine[0]] = newLine[1]
+    except:
+        pass
+
+#sortedValuePairs = list(valuePairs)
+#for item in valuePairs.items():
+#    sortedValuePairs.append(item)
+#for 
+sortedValuePairs = sorted(valuePairs.items(), key=operator.itemgetter(1))
+
+
+
+#for val in wantedFiles:
+#    val = val.replace('"', '')
+#    val = val + '.txt'
+#    listOfFileNames.append(val)      # This list will used further down to open each file with the names in this list and read the wnated lines for combining.
 
 # This portion sets up the file paths to be saved to the correct project folder within the PFS folder.
 
@@ -68,8 +86,9 @@ combinedSheet = bendWB.active
 combinedSheet.title = 'Combined Bends'
 labelSheet = bendWB.create_sheet('Labels')
 reportSheet = bendWB.create_sheet('Report')
+groupSheet = bendWB.create_sheet('Groups')
 
-paramHeaderList = ['Conduit Type', 'Conduit Size', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Rotation', 'Bend Angle', 'Conc. Bends', 'Error Code']
+paramHeaderList = ['Conduit Type', 'Conduit Size', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Angle', 'Bend Rotation', 'Conc. Bends', 'Error Code']
 linesToRead = [6, 7, 10, 15, 29, 16, 30, 18, 17, 23, 33]
 searchPath = ('V:\\1. VDC Projects\\GreenleeBendReports\\' + user + '\\BendWorksExports')
 goodListName = goodListName.replace('.txt', '')
@@ -280,13 +299,13 @@ for lists in sortedList:
 reportSheetRow = 1
 reportColCounter = 1
 reportSheetHeader = ['QTY', 'SIZE', 'TYPE']
-for elem in reportSheetHeaders:
+for elem in reportSheetHeader:
     reportSheet.cell(column=reportColCounter, row=1, value=elem)
     reportColCounter += 1
 
-while True:
-    if emtConduit_05 > 0:
-        pass
+#while True:
+#    if emtConduit_05 > 0:
+#        pass
 
 for data in sortedList:
     rowCounter +=2
@@ -354,6 +373,17 @@ for cell in range(5 , valueRange):
     combinedSheet.cell(row = cell, column = 12).font = bendRotColor
     combinedSheet.cell(row = cell, column = 13).font = bendAngleColor
 
+groupSheetRow = 1
+for item in sortedValuePairs:
+    try:
+        groupSheetCol = 1
+        groupSheet.cell(row=groupSheetRow, column=groupSheetCol, value=str(item[0]))
+        groupSheetCol += 1
+        groupSheet.cell(row=groupSheetRow, column=groupSheetCol, value=str(item[1]))
+        groupSheetRow += 1
+    except:
+        pass
+
 # Need: to format printing 10 11x17 landscape
 # Need: to format border
 # Need: to print header at the top of each 11x17 sheet
@@ -362,6 +392,7 @@ for cell in range(5 , valueRange):
 # Need: to get rid of the first cut mark and subtract it from the other marks
 # Need: to figure out orientation of the kwik fit unicouple
 # Need: to add Sheet and Group Id to the label output
+# Need: Report needs to state how many conduits were removed with the 0 and values.
 
 bendWB.save(combinedFilePath)
 print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePath)
