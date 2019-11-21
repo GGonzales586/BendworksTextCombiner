@@ -86,7 +86,6 @@ combinedSheet = bendWB.active
 combinedSheet.title = 'Combined Bends'
 labelSheet = bendWB.create_sheet('Labels')
 reportSheet = bendWB.create_sheet('Report')
-#groupSheet = bendWB.create_sheet('Groups')
 
 paramHeaderList = ['Conduit Type', 'Conduit Size', 'Conduit Group', 'Pipe Id', 'Num. of Bends', 'Cut Mark 1', 'Bend Marks', 'Cut Mark 2', 'Bend Angle', 'Bend Rotation', 'Conc. Bends', 'Error Code']
 linesToRead = [6, 7, 10, 15, 29, 16, 30, 18, 17, 23, 33]
@@ -108,14 +107,16 @@ for key, vals in sheetHeaderList.items():
     combinedSheet.cell(row = 2, column = colCounter).font = headerFont
     colCounter += 1
 
-combinedSheet.merge_cells('F3:J3')
+# Bend Marks Merg Cells
+
+combinedSheet.merge_cells('G3:K3')
 
 colCounter = 1
 for vals in paramHeaderList:
     if vals == 'Bend Marks':
-        combinedSheet.cell(row = 3, column = 6).value = vals
-        combinedSheet.cell(row = 3, column = 6).alignment = headerAlignment
-        combinedSheet.cell(row = 3, column = 6).font = headerFont
+        combinedSheet.cell(row = 3, column = 7).value = vals
+        combinedSheet.cell(row = 3, column = 7).alignment = headerAlignment
+        combinedSheet.cell(row = 3, column = 7).font = headerFont
         colCounter += 5
     else:
         combinedSheet.cell(row = 3, column = colCounter).value = vals
@@ -123,10 +124,12 @@ for vals in paramHeaderList:
         combinedSheet.cell(row = 3, column = colCounter).font = headerFont
         colCounter +=1
 
+filesFound = []
 masterValues = []
 rowCounter = 3
 for file in os.listdir(searchPath):
-    if file in listOfFileNames:        
+    if file in listOfFileNames:
+        filesFound.append(file)
         openFile = open(searchPath + '\\' + file).read()
         splitFile = openFile.splitlines()
         wantedValues = []        
@@ -236,6 +239,8 @@ for lists in sortedList:
         else:
             otherConduit[lists[1]] += 1
 
+# Report Sheet Output
+
 conduitTypes = [emtConduit, rmcConduit, otherConduit]
 materialTypes = ['EMT', 'IMC', 'OTHER']
 reportRow = 1
@@ -276,11 +281,15 @@ for quantity in namesToRemove:
     reportRow += 1
     reportSheet.cell(column=reportCol, row=reportRow, value=quantity) 
 
-reportRow = 2    
-reportSheet.cell(column=5, row=1, value='GROUPS')
-for group in groupNames:
-    reportSheet.cell(column=5, row=reportRow, value=group)
-    reportRow += 1
+reportRow += 2
+reportCol = 1
+reportSheet.cell(column=reportCol, row=reportRow, value='Files Not Found')
+for name in listOfFileNames:
+    if name not in filesFound:
+        reportRow += 1
+        reportSheet.cell(column=reportCol, row=reportRow, value=name)
+
+# Combined Sheet output
 
 for data in smallSortedList:
     rowCounter +=2
@@ -296,8 +305,10 @@ for data in bigSortedList:
         combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
         colCounter += 1
 
+# Label Sheet Output
+
 labelColCounter = 1
-labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Group ID', 'Bend Id', 'Sheet']
+labelTitles = ['JobName', 'JobNumber', 'Area', 'Type', 'Size', 'Group ID', 'Bend Id', 'Sheet', 'GROUPS']
 for item in labelTitles:
     labelSheet.cell(column=labelColCounter, row=1, value=item)
     labelColCounter +=1
@@ -326,12 +337,17 @@ for lists in bigSortedList:
             labelSheet.cell(column=labelsColCounter, row=labelRowCounter, value=data)
             labelsColCounter += 1
 
+labelRowCounter = 2    
+for group in groupNames:
+    labelSheet.cell(column=9, row=labelRowCounter, value=group)
+    labelRowCounter += 1
+
 # This section applies formatting after all the values are processed
 
 for x in range(4):
     combinedSheet.row_dimensions[x].height = 45
 
-colWidths = {'colWidt10' : ['F', 'G', 'H', 'I', 'J', 'O'], 'colWidth12' : ['E', 'N', 'K'], 'colWidth15' : ['A', 'B', 'C', 'D'], 'colWidth35' : ['L', 'M']}
+colWidths = {'colWidt10' : ['F', 'G', 'H', 'I', 'J', 'O'], 'colWidth12' : ['E', 'N', 'K', 'L'], 'colWidth15' : ['A', 'B', 'C', 'D'], 'colWidth35' : ['M', 'N']}
 
 for key, value in colWidths.items():
     if '10' in key:
@@ -372,7 +388,7 @@ for cell in range(5 , valueRange):
 # Need: to do some math to output the offset. (if it is an offset or kick 90.)
 # Need: to get rid of the first cut mark and subtract it from the other marks
 # Need: to figure out orientation of the kwik fit unicouple
-# Need: to add Sheet logic if it's ever used
+# Need: to add Sheet info to label if it's ever used
 
 bendWB.save(combinedFilePath)
 print('\nThe workbook is saved in the following locaton : \n\n' + combinedFilePath)
@@ -387,7 +403,7 @@ columnValues = {'A': jobNum, 'B': goodListName, 'C': currentDate, 'D': user + '.
 
 def endStatement():
     ending = ('\nProcessed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + " seconds!!!\n\nDon't forget to check the report Sheet!")
-    print(ending)
+    return ending
 
 rowToWriteIn = 5
 for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row, min_col =2, max_col = 2, values_only = True):   
@@ -395,8 +411,7 @@ for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row
         print('\nBend area already found in PFS Tracking workbook. No values added.\n\nLabels created! Ready for a mail merge!')
         PFSTrackingwb.save(PFSFilePath)     # Replace file path with - PFSFilePath
         endTime = time.time()
-        endStatement()
-        #print('Processed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + ' seconds!!!\n')
+        print(endStatement())
         time.sleep(2)
         exit(0)
     elif line[0] is None:   
@@ -419,8 +434,7 @@ for line in trackingSheet.iter_rows(min_row = 5, max_row = trackingSheet.max_row
 PFSTrackingwb.save(PFSFilePath)    # Replace file path with - PFSFilePath
 print('\nValues added to the PFS tracking sheet!\n\nLabels created! Ready for a mail merge!')
 endTime = time.time()
-endStatement()
-#print('\nProcessed ' + totalNumOfBends + ' bends in a whopping ' + str(round(endTime - startTime, 2)) + ' seconds!!!')
+print(endStatement())
 time.sleep(2)
 
 # Inserting a new row needs to carry the sum range with it.
