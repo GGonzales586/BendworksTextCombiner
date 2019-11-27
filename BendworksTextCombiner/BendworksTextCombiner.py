@@ -7,6 +7,7 @@ from openpyxl.utils.cell import column_index_from_string
 from openpyxl import worksheet
 from datetime import datetime, date
 from copy import copy
+from fractions import Fraction as frac
 
 def sortByIndex(List, index):
     List.sort(key = lambda i: i[index])
@@ -28,6 +29,19 @@ def stringToDec(strFrac):
 user = getpass.getuser()
 currentYear = datetime.now().year
 currentDate = date.today()
+
+def decToString(dec):
+    fraction = str(frac(dec))
+    split = fraction.split('/')
+    try:
+        if int(split[0]) > int(split[1]):
+            whole = int(split[0]) // int(split[1])
+            numer = int(split[0]) - (whole * int(split[1]))
+            return str(whole) + ' ' + str(numer) + '/' + str(split[1])
+        else:
+            return fraction
+    except:
+        return fraction
 
 while True:
     try:
@@ -295,14 +309,22 @@ for data in smallSortedList:
     rowCounter +=2
     colCounter = 1
     for elem in data:
-        combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
+        if elem is data[1]:
+            stringFraction = decToString(elem)
+            combinedSheet.cell(row = rowCounter, column = colCounter).value = stringFraction
+        else:
+            combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
         colCounter +=1
 
 for data in bigSortedList:
     rowCounter += 2
     colCounter = 1
     for elem in data:
-        combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
+        if elem is data[1]:
+            stringFraction = decToString(elem)
+            combinedSheet.cell(row = rowCounter, column = colCounter).value = stringFraction
+        else:
+            combinedSheet.cell(row = rowCounter, column = colCounter).value = str(elem)
         colCounter += 1
 
 # Label Sheet Output
