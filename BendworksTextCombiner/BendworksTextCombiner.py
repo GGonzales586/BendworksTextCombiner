@@ -255,7 +255,7 @@ for lists in sortedList:
 
 # Report Sheet Output
 
-conduitTypes = [emtConduit, rmcConduit, otherConduit]
+conduitTypes = [emtConduit, rmcConduit, otherConduit]       #Material req filling out
 materialTypes = ['EMT', 'IMC', 'OTHER']
 reportRow = 1
 reportCol = 1
